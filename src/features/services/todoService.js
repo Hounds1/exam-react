@@ -1,31 +1,28 @@
-import axios from "axios";
+import { connector } from './network/axiosSupport.js';
 
-const http = axios.create({
-    baseURL: '/api/react-exam/todos',
-    headers: {"Content-Type": 'application/json'}
-});
+const TODO_PATH = "/todos";
 
-export const getTodos = async () => {
-    const {data} = await http.get('/list');
+export async function listTodos(params = {}) {
+    const { data } = await connector.get(TODO_PATH, { params })
+    return Array.isArray(data) ? { items: data, total: data.length } : data;
+}
+
+export async function details(id) {
+    const { data } = await connector.get(`${TODO_PATH}/${id}`)
     return data;
-};
+}
 
-export const getDetails = async (signature) => {
-    const {data} = await http.get(`/${signature}`);
+export async function create(req) {
+    const { data } = await connector.post(TODO_PATH, req);
     return data;
-};
+}
 
-export const creation = async (insReq) => {
-    const {data} = await http.post('', insReq);
-    return data;
-};
+export async function modify(id, patch) {
+    const { data } = await connector.patch(`${TODO_PATH}/${id}`, patch);
+    return data; 
+}
 
-export const modification = async (modReq) => {
-    const {data} = await http.put('', modReq);
+export async function remove(id) {
+    const { data } = await connector.delete(`${TODO_PATH}/${id}`);
     return data;
-};
-
-export const deletion = async (signature) => {
-    const {data} = await http.delete(`/${signature}`);
-    return data;
-};
+}
