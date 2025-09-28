@@ -18,6 +18,17 @@ export default function App() {
   const [query, setQuery] = useState('');
   const [boot, setBoot] = useState({ ready: false, error: null, source: null});
 
+  const refreshTodo = useCallback(async() => {
+    try {
+      const { items, total } = await listTodos();
+      setTodo(items);
+      setTotal(total);
+      setEmpty(total === 0);
+    } catch(e) {
+      setError(e);
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -97,17 +108,6 @@ export default function App() {
        await refreshTodo();
     }
   }, [remove, refreshTodo])
-
-  const refreshTodo = useCallback(async() => {
-    try {
-      const { items, total } = await listTodos();
-      setTodo(items);
-      setTotal(total);
-      setEmpty(total === 0);
-    } catch(e) {
-      setError(e);
-    }
-  }, []);
 
   if (!boot.ready && !boot.error) return <div className="status__row is-loading">Initializing…</div>;
   if (boot.error) return <div className="status__row has-error">Failed to generate token.</div>;
