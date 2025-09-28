@@ -3,16 +3,16 @@ import Header from "./features/components/Header.jsx";
 import StatusBar from "./features/components/StatusBar.jsx";
 import TodoForm from "./features/components/TodoForm.jsx";
 import TodoList from "./features/components/TodoList.jsx";
-import TodoItem from "./features/components/TodoItem";
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { listTodos, details, create, modify, remove } from "./features/services/todoService.js";
 import { generate } from "./features/services/instantTokenService.js";
 
 export default function App() {
   const [todos, setTodo] = useState([]);
-  const [isLoading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
   const [isEmpty, setEmpty] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
@@ -35,19 +35,52 @@ export default function App() {
       try {
         setLoading(true);
         setError(null);
-        const { items } = await listTodos();
+        const { items, total } = await listTodos();
         setTodo(items);
-        if(items.length === 0) setEmpty(true);
+        setTotal(total);
+        setEmpty(total === 0);
       } catch(e) {
         setError(e);
       } finally {
         setLoading(false);
       }
     }
-    fetchTodo 
+    fetchTodo();
   }, [])
 
+  const onCreate = useCallback(async (payload) => {
+    setLoading(true); setError(null);
+    
+    try {
+    await create(payload);
+    const { items, total } = await listTodos();
+    setTodo(items);
+    setTotal(total);
+  } catch (e) {
+    setError(e);
+  } finally {
+    setLoading(false);
+  }
+  }, []);
 
+  const onRemove = useCallback(async (signature) => {
+    setError(null);
+
+    setTodo(prev => prev.filter(t => t.signature !== signature));
+    setTotal(prev => Math.max(0, prev - 1));
+
+    try {
+      await remove(signature);
+    } catch(e) {
+       setError(e);
+
+       try {
+         const { items, total } = await listTodos();
+         setTodo(items);
+         setTotal(total);
+       } catch {}
+    }
+  }, [])
 
   if (!boot.ready && !boot.error) return <div className="status__row is-loading">Initializing…</div>;
   if (boot.error) return <div className="status__row has-error">Failed to generate token.</div>;
@@ -57,14 +90,14 @@ export default function App() {
       <Header 
         onSearch={setQuery}
         onChangeFilter={setFilter}
-        count={filter.length}      
+        count={todos.total}
       />
 
       <main className="main container" id="main">
         <section className="panel" aria-labelledby="addTodoTitle">
           <h2 id="addTodoTitle" className="panel__title">새 할 일 추가</h2>
           <TodoForm 
-            onCreate={create}
+            onCreate={onCreate}
             pending = {isLoading}
           />
           <p className="hint">엔터로 추가 가능. 제목은 필수입니다.</p>
@@ -89,8 +122,11 @@ export default function App() {
             </div>
           </div>
 
-          <TodoList />
-          <p id="listHelp" className="hint">항목을 체크하여 완료로 표시할 수 있습니다.</p>
+          <TodoList 
+            items={todos}
+            total={total}
+            onRemove={onRemove}
+          />
         </section>
 
       </main>
