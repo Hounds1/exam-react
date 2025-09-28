@@ -35,10 +35,7 @@ export default function App() {
       try {
         setLoading(true);
         setError(null);
-        const { items, total } = await listTodos();
-        setTodo(items);
-        setTotal(total);
-        setEmpty(total === 0);
+        await refreshTodo();
       } catch(e) {
         setError(e);
       } finally {
@@ -46,22 +43,20 @@ export default function App() {
       }
     }
     fetchTodo();
-  }, [])
+  }, []);
 
   const onCreate = useCallback(async (payload) => {
     setLoading(true); setError(null);
     
     try {
     await create(payload);
-    const { items, total } = await listTodos();
-    setTodo(items);
-    setTotal(total);
+    await refreshTodo();
   } catch (e) {
     setError(e);
   } finally {
     setLoading(false);
   }
-  }, []);
+  }, [create, refreshTodo]);
 
   const onComplete = useCallback(async (signature) => {
     setError(null);
@@ -70,14 +65,9 @@ export default function App() {
       await complete(signature);
     } catch(e) {
       setError(e);
-
-      try {
-        const { items, total } = await listTodos();
-        setTodo(items);
-        setTotal(total);
-      } catch {}
+      await refreshTodo();
     }
-  }, [])
+  }, [complete, refreshTodo])
 
   const onIncomplete = useCallback(async (signature) => {
     setError(null);
@@ -86,33 +76,38 @@ export default function App() {
       await incomplete(signature);
     } catch(e) {
       setError(e);
-
-      try {
-        const { items, total } = await listTodos();
-        setTodo(items);
-        setTotal(total);
-      } catch {}
+      await refreshTodo();
     }
-  }, [])
+  }, [incomplete, refreshTodo])
 
   const onRemove = useCallback(async (signature) => {
     setError(null);
 
-    setTodo(prev => prev.filter(t => t.signature !== signature));
-    setTotal(prev => Math.max(0, prev - 1));
-
+    setTodo(prev => {
+      const next = prev.filter(t => t.signature !== signature);
+      setTotal(next.length);
+      setEmpty(next.length === 0);
+      return next;
+    });
+    
     try {
       await remove(signature);
     } catch(e) {
        setError(e);
-
-       try {
-         const { items, total } = await listTodos();
-         setTodo(items);
-         setTotal(total);
-       } catch {}
+       await refreshTodo();
     }
-  }, [])
+  }, [remove, refreshTodo])
+
+  const refreshTodo = useCallback(async() => {
+    try {
+      const { items, total } = await listTodos();
+      setTodo(items);
+      setTotal(total);
+      setEmpty(total === 0);
+    } catch(e) {
+      setError(e);
+    }
+  }, []);
 
   if (!boot.ready && !boot.error) return <div className="status__row is-loading">Initializing…</div>;
   if (boot.error) return <div className="status__row has-error">Failed to generate token.</div>;
@@ -122,7 +117,7 @@ export default function App() {
       <Header 
         onSearch={setQuery}
         onChangeFilter={setFilter}
-        count={todos.total}
+        count={total}
       />
 
       <main className="main container" id="main">
