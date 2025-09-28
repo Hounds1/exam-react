@@ -1,34 +1,15 @@
 <!doctype html>
 <html lang="ko">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light dark" />
-    <title>TodoList</title>
-    <link rel="stylesheet" href="./styles.css" />
-    <!-- React 18 CDN -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel (for on-the-fly JSX transform in development) -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <!-- App -->
-    <script type="text/babel" data-presets="env,react" src="./app.jsx"></script>
-  </body>
-  </html>
-
-<!doctype html>
-<html lang="en">
-  <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>exam-react-app</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TodoList</title>
+    <!-- public/styles.css 에 두었다면: -->
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <div id="root"></div>
+    <!-- Vite 진입 스크립트: ESM -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-export default function StatusBar() {
+export default function StatusBar({ isLoading, error, isEmpty}) {
     return (
         <section className="status" aria-live="polite">
             <div className="status__row is-loading" hidden={!isLoading}>로딩 중…</div>

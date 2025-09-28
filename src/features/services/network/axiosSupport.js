@@ -35,7 +35,6 @@ connector.interceptors.response.use(
     }
 )
 
-
 function normalizeNetworkError(error) {
     const status = error?.response?.status ?? null;
     const code = error?.code ?? null;

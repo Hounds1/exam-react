@@ -12,6 +12,7 @@ import { generate } from "./features/services/instantTokenService.js";
 export default function App() {
   const [todos, setTodo] = useState([]);
   const [isLoading, setLoading] = useState(false);
+  const [isEmpty, setEmpty] = useState(false);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
@@ -36,6 +37,7 @@ export default function App() {
         setError(null);
         const { items } = await listTodos();
         setTodo(items);
+        if(items.length === 0) setEmpty(true);
       } catch(e) {
         setError(e);
       } finally {
@@ -68,7 +70,11 @@ export default function App() {
           <p className="hint">엔터로 추가 가능. 제목은 필수입니다.</p>
         </section>
 
-        <StatusBar />
+        <StatusBar 
+          isLoading={isLoading}
+          error={error}
+          isEmpty={isEmpty}
+        />
 
         <section className="panel" aria-labelledby="listTitle">
           <div className="panel__header">
