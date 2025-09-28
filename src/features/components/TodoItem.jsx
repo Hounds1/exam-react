@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { complete, incomplete } from '../services/todoService.js'
 
-export default function TodoItem({ signature, title, priority, dueDate, initialCompleted , onRemove}) {
+export default function TodoItem({ signature, title, priority, dueDate, initialCompleted , onRemove, onComplete, onIncomplete}) {
     const [completed, setCompleted] = useState(initialCompleted ?? false);
     const [pending, setPending] = useState(false);
 
@@ -10,8 +9,8 @@ export default function TodoItem({ signature, title, priority, dueDate, initialC
         setCompleted(checked);
 
         try {
-            if (checked) await complete(signature);
-            else await incomplete(signature);
+            if (checked) await onComplete?.(signature);
+            else await onIncomplete?.(signature);
         } catch(err) {
             console.log(err);
             setCompleted(!checked);

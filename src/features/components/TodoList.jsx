@@ -1,6 +1,6 @@
 import TodoItem from './TodoItem';
 
-export default function TodoList({ items = [], total = 0, onRemove}) {
+export default function TodoList({ items = [], total = 0, onRemove, onComplete, onIncomplete}) {
   const isEmpty = total === 0;
 
   return (
@@ -17,6 +17,8 @@ export default function TodoList({ items = [], total = 0, onRemove}) {
             dueDate={todo.dueDate}
             initialCompleted={todo.completed}
             onRemove={onRemove}
+            onComplete={onComplete}
+            onIncomplete={onIncomplete}
           />
         ))
       )}

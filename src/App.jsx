@@ -5,7 +5,7 @@ import TodoForm from "./features/components/TodoForm.jsx";
 import TodoList from "./features/components/TodoList.jsx";
 
 import { useCallback, useEffect, useState } from 'react';
-import { listTodos, details, create, modify, remove } from "./features/services/todoService.js";
+import { listTodos, details, create, modify, remove, complete, incomplete } from "./features/services/todoService.js";
 import { generate } from "./features/services/instantTokenService.js";
 
 export default function App() {
@@ -62,6 +62,38 @@ export default function App() {
     setLoading(false);
   }
   }, []);
+
+  const onComplete = useCallback(async (signature) => {
+    setError(null);
+
+    try {
+      await complete(signature);
+    } catch(e) {
+      setError(e);
+
+      try {
+        const { items, total } = await listTodos();
+        setTodo(items);
+        setTotal(total);
+      } catch {}
+    }
+  }, [])
+
+  const onIncomplete = useCallback(async (signature) => {
+    setError(null);
+
+    try {
+      await incomplete(signature);
+    } catch(e) {
+      setError(e);
+
+      try {
+        const { items, total } = await listTodos();
+        setTodo(items);
+        setTotal(total);
+      } catch {}
+    }
+  }, [])
 
   const onRemove = useCallback(async (signature) => {
     setError(null);
@@ -126,6 +158,8 @@ export default function App() {
             items={todos}
             total={total}
             onRemove={onRemove}
+            onComplete={onComplete}
+            onIncomplete={onIncomplete}
           />
         </section>
 
