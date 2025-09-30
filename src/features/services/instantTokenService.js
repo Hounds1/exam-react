@@ -11,20 +11,22 @@ function uuidv4() {
 }
 
 export async function generate() {
-    const token = await connector.get(GENERATE_PATH);
+    const res = await connector.get(GENERATE_PATH);
 
-    if (token.status != 201) {
+    if (res.status != 201) {
         const uuid = uuidv4();
         const swap = {
             "token": uuid
         }
 
-        const { res } = await connector.post(SWAP_PATH, swap);
-        if (res.status === 200) console.log("Instant token has been swapped.");
+        const swapped = await connector.post(SWAP_PATH, swap);
+        if (swapped.status === 200) console.log("Instant token has been swapped.");
         else connector.setAuth(uuid);
 
-        return token;
+        return swapped.data;
     }
+
+    const token = res.data;
 
     setAuth(token);
     return token;

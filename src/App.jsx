@@ -11,20 +11,18 @@ import { generate } from "./features/services/instantTokenService.js";
 export default function App() {
   const [todos, setTodo] = useState([]);
   const [total, setTotal] = useState(0);
-  const [isEmpty, setEmpty] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
-  const [boot, setBoot] = useState({ ready: false, error: null, source: null});
+  const [tokenError, setTokenError] = useState(false);
 
-  const refreshTodo = useCallback(async() => {
+  const refreshTodo = useCallback(async () => {
     try {
       const { items, total } = await listTodos();
       setTodo(items);
       setTotal(total);
-      setEmpty(total === 0);
-    } catch(e) {
+    } catch (e) {
       setError(e);
     }
   }, []);
@@ -32,11 +30,11 @@ export default function App() {
   useEffect(() => {
     (async () => {
       try {
-        const { source } = await generate();
-        setBoot({ ready: true, error: null, source});
-      } catch(e) {
+        const token = await generate();
+        if (token === null || token === undefined) setTokenError(true);
+      } catch (e) {
         console.log(e);
-        setBoot({ ready: false, error: e, source: null});
+        setTokenError(true);
       }
     })();
   }, []);
@@ -47,7 +45,7 @@ export default function App() {
         setLoading(true);
         setError(null);
         await refreshTodo();
-      } catch(e) {
+      } catch (e) {
         setError(e);
       } finally {
         setLoading(false);
@@ -58,15 +56,15 @@ export default function App() {
 
   const onCreate = useCallback(async (payload) => {
     setLoading(true); setError(null);
-    
+
     try {
-    await create(payload);
-    await refreshTodo();
-  } catch (e) {
-    setError(e);
-  } finally {
-    setLoading(false);
-  }
+      await create(payload);
+      await refreshTodo();
+    } catch (e) {
+      setError(e);
+    } finally {
+      setLoading(false);
+    }
   }, [create, refreshTodo]);
 
   const onComplete = useCallback(async (signature) => {
@@ -74,7 +72,7 @@ export default function App() {
 
     try {
       await complete(signature);
-    } catch(e) {
+    } catch (e) {
       setError(e);
       await refreshTodo();
     }
@@ -85,7 +83,7 @@ export default function App() {
 
     try {
       await incomplete(signature);
-    } catch(e) {
+    } catch (e) {
       setError(e);
       await refreshTodo();
     }
@@ -97,25 +95,38 @@ export default function App() {
     setTodo(prev => {
       const next = prev.filter(t => t.signature !== signature);
       setTotal(next.length);
-      setEmpty(next.length === 0);
       return next;
     });
-    
+
     try {
       await remove(signature);
-    } catch(e) {
-       setError(e);
-       await refreshTodo();
+    } catch (e) {
+      setError(e);
+      await refreshTodo();
     }
   }, [remove, refreshTodo])
 
-  if (!boot.ready && !boot.error) return <div className="status__row is-loading">Initializing…</div>;
-  if (boot.error) return <div className="status__row has-error">Failed to generate token.</div>;
+  const onSearch = useCallback(async (keyword) => {
+    setError(null);
+    try {
+      const { items, total } = await listTodos({ keyword: keyword ?? '' });
+      setTodo(items);
+      setTotal(total);
+    } catch (e) {
+      setError(e);
+    }
+  }, []);
+
+  const isEmpty = total === 0;
+  const ready = !isLoading && !error;
+
+  if (!ready) return <div className="status__row has-error">Internal Server Error Or Bad Request.</div>;
+  if (tokenError) return <div className="status__row has-error">Failed to generate token.</div>;
 
   return (
     <div className="app">
-      <Header 
-        onSearch={setQuery}
+      <Header
+        onSearch={onSearch}
         onChangeFilter={setFilter}
         count={total}
       />
@@ -123,14 +134,14 @@ export default function App() {
       <main className="main container" id="main">
         <section className="panel" aria-labelledby="addTodoTitle">
           <h2 id="addTodoTitle" className="panel__title">새 할 일 추가</h2>
-          <TodoForm 
+          <TodoForm
             onCreate={onCreate}
-            pending = {isLoading}
+            pending={isLoading}
           />
           <p className="hint">엔터로 추가 가능. 제목은 필수입니다.</p>
         </section>
 
-        <StatusBar 
+        <StatusBar
           isLoading={isLoading}
           error={error}
           isEmpty={isEmpty}
@@ -149,7 +160,7 @@ export default function App() {
             </div>
           </div>
 
-          <TodoList 
+          <TodoList
             items={todos}
             total={total}
             onRemove={onRemove}

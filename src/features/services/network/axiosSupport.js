@@ -7,8 +7,8 @@ export const connector = axios.create({
 });
 
 let token = null;
-export function setAuth(token) {
-    token = token;
+export function setAuth(data) {
+    token = data.token;
 }
 
 let onUnauthorized = null;
